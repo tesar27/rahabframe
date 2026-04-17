@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "title": "RehabFrame",
+    "description": "Video-based rehabilitation progress reviews for therapy teams."
+  },
+  "sidebar": {
+    "subtitle": "Video progress workspace",
+    "mvpNote": "MVP mode: raw videos stay in the browser and only the extracted movement metrics are saved.",
+    "historyTitle": "History",
+    "emptyHistory": "Your saved analyses will appear here after the first comparison."
+  },
+  "header": {
+    "subtitle": "Therapeutic physical education review",
+    "title": "Upload two videos and get a structured movement comparison.",
+    "disclaimer": "Automated summary only · not a diagnosis"
+  },
+  "landing": {
+    "badge": "Workspace ready",
+    "headline": "This prototype compares a baseline clip against a follow-up clip and turns it into a readable report.",
+    "description": "The browser samples key frames with MoveNet, scores symmetry, stability, motion range, and tracking quality, then saves the generated report in the history sidebar.",
+    "measuresTitle": "What the first version measures",
+    "measures": {
+      "symmetry": "Symmetry between left and right joint angles.",
+      "stability": "Hip-center stability while the movement unfolds.",
+      "kneeFlexion": "Knee flexion range as a simple range-of-motion proxy.",
+      "tracking": "Tracking confidence so low-quality recordings are flagged."
+    }
+  },
+  "analysisView": {
+    "uploadedComparison": "Uploaded comparison",
+    "baseline": "Baseline",
+    "followup": "Follow-up",
+    "automatedReport": "Automated report",
+    "overallScore": "Overall score {score}",
+    "suggestedNextSteps": "Suggested next steps",
+    "reviewNotes": "Review notes"
+  },
+  "insights": {
+    "baseline": "Baseline",
+    "followup": "Follow-up"
+  },
+  "dropzone": {
+    "baselineLabel": "Baseline",
+    "followupLabel": "Follow-up",
+    "videoBadge": "Video",
+    "dropHere": "Drop {label} clip here",
+    "fileTypes": "MP4, WebM, or MOV. Keep the full body inside the frame.",
+    "clickToChoose": "Click to choose a local file",
+    "readyForAnalysis": "Ready for analysis",
+    "clear": "Clear",
+    "browse": "Browse"
+  },
+  "bottomBar": {
+    "initialStatus": "Choose a baseline clip and a follow-up clip to generate a movement report.",
+    "analysisComplete": "Analysis complete. The new report is now pinned in history.",
+    "analysisStopped": "The analysis stopped before completion.",
+    "savingReport": "Saving report...",
+    "analyzeProgress": "Analyze progress",
+    "errorBothVideos": "Select both videos before starting the analysis.",
+    "errorServerSave": "The server could not save the generated analysis.",
+    "errorAnalysis": "The analysis could not be completed."
+  },
+  "languageSwitcher": {
+    "ru": "РУС",
+    "en": "EN"
+  }
+}

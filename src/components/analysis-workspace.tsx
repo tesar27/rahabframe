@@ -1,20 +1,23 @@
 "use client";
 
 import { useId, useState, useTransition } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { analyzeVideoPair } from "@/lib/client/movenet-analysis";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import type { AnalysisRecord } from "@/lib/types";
 
 interface AnalysisWorkspaceProps {
   initialAnalyses: AnalysisRecord[];
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
+function formatDate(value: string, locale: string) {
+  return new Intl.DateTimeFormat(locale === "ru" ? "ru-RU" : "en-US", {
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "UTC",
   }).format(new Date(value));
 }
 
@@ -56,12 +59,16 @@ function scoreStyles(score: number) {
 
 function VideoDropzone({
   label,
+  dropLabel,
   file,
   onFileSelect,
+  tDropzone,
 }: {
   label: string;
+  dropLabel: string;
   file: File | null;
   onFileSelect: (file: File | null) => void;
+  tDropzone: ReturnType<typeof useTranslations<"dropzone">>;
 }) {
   const inputId = useId();
   const [isDragging, setIsDragging] = useState(false);
@@ -106,24 +113,26 @@ function VideoDropzone({
             {label}
           </span>
           <span className="rounded-full bg-sage-soft px-3 py-1 text-xs font-medium text-sage">
-            Video
+            {tDropzone("videoBadge")}
           </span>
         </div>
         <div>
           <p className="text-base font-semibold text-foreground">
-            {file ? file.name : `Drop ${label.toLowerCase()} clip here`}
+            {file
+              ? file.name
+              : tDropzone("dropHere", { label: dropLabel.toLowerCase() })}
           </p>
           <p className="mt-1 text-sm text-muted">
             {file
               ? `${formatFileSize(file.size)} · ${file.type || "Unknown format"}`
-              : "MP4, WebM, or MOV. Keep the full body inside the frame."}
+              : tDropzone("fileTypes")}
           </p>
         </div>
       </div>
 
       <div className="mt-5 flex items-center justify-between text-sm text-muted">
         <span>
-          {file ? "Ready for analysis" : "Click to choose a local file"}
+          {file ? tDropzone("readyForAnalysis") : tDropzone("clickToChoose")}
         </span>
         {file ? (
           <button
@@ -134,11 +143,11 @@ function VideoDropzone({
             }}
             className="rounded-full border border-line px-3 py-1 font-medium text-foreground transition hover:border-sage"
           >
-            Clear
+            {tDropzone("clear")}
           </button>
         ) : (
           <span className="rounded-full border border-line px-3 py-1 font-medium text-foreground">
-            Browse
+            {tDropzone("browse")}
           </span>
         )}
       </div>
@@ -147,12 +156,16 @@ function VideoDropzone({
 }
 
 export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
+  const locale = useLocale();
+  const t = useTranslations();
+  const tDropzone = useTranslations("dropzone");
+
   const [analyses, setAnalyses] = useState(initialAnalyses);
   const [selectedId, setSelectedId] = useState(initialAnalyses[0]?.id ?? null);
   const [baselineFile, setBaselineFile] = useState<File | null>(null);
   const [followupFile, setFollowupFile] = useState<File | null>(null);
-  const [statusText, setStatusText] = useState(
-    "Choose a baseline clip and a follow-up clip to generate a movement report.",
+  const [statusText, setStatusText] = useState(() =>
+    t("bottomBar.initialStatus"),
   );
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -162,7 +175,7 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
 
   async function handleAnalyze() {
     if (!baselineFile || !followupFile) {
-      setErrorText("Select both videos before starting the analysis.");
+      setErrorText(t("bottomBar.errorBothVideos"));
       return;
     }
 
@@ -183,7 +196,7 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
       });
 
       if (!response.ok) {
-        throw new Error("The server could not save the generated analysis.");
+        throw new Error(t("bottomBar.errorServerSave"));
       }
 
       const data = (await response.json()) as { analysis: AnalysisRecord };
@@ -195,16 +208,12 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
         setFollowupFile(null);
       });
 
-      setStatusText(
-        "Analysis complete. The new report is now pinned in history.",
-      );
+      setStatusText(t("bottomBar.analysisComplete"));
     } catch (error) {
       setErrorText(
-        error instanceof Error
-          ? error.message
-          : "The analysis could not be completed.",
+        error instanceof Error ? error.message : t("bottomBar.errorAnalysis"),
       );
-      setStatusText("The analysis stopped before completion.");
+      setStatusText(t("bottomBar.analysisStopped"));
     }
   }
 
@@ -218,18 +227,17 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
             </div>
             <div>
               <p className="text-lg font-semibold">RehabFrame</p>
-              <p className="text-sm text-muted">Video progress workspace</p>
+              <p className="text-sm text-muted">{t("sidebar.subtitle")}</p>
             </div>
           </div>
           <p className="mt-4 text-sm leading-6 text-muted">
-            MVP mode: raw videos stay in the browser and only the extracted
-            movement metrics are saved.
+            {t("sidebar.mvpNote")}
           </p>
         </div>
 
         <div className="mt-6 flex items-center justify-between px-1">
           <h2 className="text-sm font-semibold tracking-[0.16em] text-muted uppercase">
-            History
+            {t("sidebar.historyTitle")}
           </h2>
           <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-medium text-sage">
             {analyses.length}
@@ -239,7 +247,7 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
         <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
           {analyses.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-line bg-white/55 p-5 text-sm leading-6 text-muted">
-              Your saved analyses will appear here after the first comparison.
+              {t("sidebar.emptyHistory")}
             </div>
           ) : null}
 
@@ -264,7 +272,7 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                       {analysis.title}
                     </p>
                     <p className="mt-1 text-xs text-muted">
-                      {formatDate(analysis.createdAt)}
+                      {formatDate(analysis.createdAt, locale)}
                     </p>
                   </div>
                   <div
@@ -289,14 +297,17 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold tracking-[0.16em] text-muted uppercase">
-                Therapeutic physical education review
+                {t("header.subtitle")}
               </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">
-                Upload two videos and get a structured movement comparison.
+                {t("header.title")}
               </h1>
             </div>
-            <div className="hidden rounded-full border border-line bg-white/70 px-4 py-2 text-sm font-medium text-muted lg:block">
-              Automated summary only · not a diagnosis
+            <div className="flex items-center gap-3">
+              <div className="hidden rounded-full border border-line bg-white/70 px-4 py-2 text-sm font-medium text-muted lg:block">
+                {t("header.disclaimer")}
+              </div>
+              <LanguageSwitcher />
             </div>
           </div>
         </header>
@@ -307,30 +318,25 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
               <div className="mx-auto grid max-w-4xl gap-6 pt-8 lg:grid-cols-[1.2fr_0.8fr]">
                 <div className="rounded-4xl border border-white/80 bg-white/85 p-8 shadow-(--shadow)">
                   <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold tracking-[0.16em] text-accent uppercase">
-                    Workspace ready
+                    {t("landing.badge")}
                   </span>
                   <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight text-balance">
-                    This prototype compares a baseline clip against a follow-up
-                    clip and turns it into a readable report.
+                    {t("landing.headline")}
                   </h2>
                   <p className="mt-5 max-w-2xl text-base leading-7 text-muted">
-                    The browser samples key frames with MoveNet, scores
-                    symmetry, stability, motion range, and tracking quality,
-                    then saves the generated report in the history sidebar.
+                    {t("landing.description")}
                   </p>
                 </div>
 
                 <div className="rounded-4xl border border-line bg-[#fbf4ea]/80 p-6">
                   <h3 className="text-sm font-semibold tracking-[0.16em] text-muted uppercase">
-                    What the first version measures
+                    {t("landing.measuresTitle")}
                   </h3>
                   <div className="mt-4 space-y-3 text-sm leading-6 text-muted">
-                    <p>Symmetry between left and right joint angles.</p>
-                    <p>Hip-center stability while the movement unfolds.</p>
-                    <p>Knee flexion range as a simple range-of-motion proxy.</p>
-                    <p>
-                      Tracking confidence so low-quality recordings are flagged.
-                    </p>
+                    <p>{t("landing.measures.symmetry")}</p>
+                    <p>{t("landing.measures.stability")}</p>
+                    <p>{t("landing.measures.kneeFlexion")}</p>
+                    <p>{t("landing.measures.tracking")}</p>
                   </div>
                 </div>
               </div>
@@ -339,12 +345,12 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                 <div className="flex justify-end">
                   <div className="max-w-2xl rounded-[30px] rounded-br-md bg-[linear-gradient(135deg,#cc6f45,#b95b34)] px-6 py-5 text-white shadow-[0_18px_45px_rgba(184,88,49,0.28)]">
                     <p className="text-sm font-semibold tracking-[0.16em] uppercase text-white/80">
-                      Uploaded comparison
+                      {t("analysisView.uploadedComparison")}
                     </p>
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       <div className="rounded-2xl bg-white/12 p-4">
                         <p className="text-xs font-semibold tracking-[0.14em] text-white/70 uppercase">
-                          Baseline
+                          {t("analysisView.baseline")}
                         </p>
                         <p className="mt-2 text-sm font-semibold">
                           {selectedAnalysis.baseline.fileName}
@@ -359,7 +365,7 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                       </div>
                       <div className="rounded-2xl bg-white/12 p-4">
                         <p className="text-xs font-semibold tracking-[0.14em] text-white/70 uppercase">
-                          Follow-up
+                          {t("analysisView.followup")}
                         </p>
                         <p className="mt-2 text-sm font-semibold">
                           {selectedAnalysis.followup.fileName}
@@ -381,14 +387,16 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
                         <p className="text-sm font-semibold tracking-[0.16em] text-muted uppercase">
-                          Automated report
+                          {t("analysisView.automatedReport")}
                         </p>
                         <h2 className="mt-1 text-2xl font-semibold">
                           {selectedAnalysis.title}
                         </h2>
                       </div>
                       <div className="rounded-full bg-sage-soft px-4 py-2 text-sm font-semibold text-sage">
-                        Overall score {selectedAnalysis.overallScore}
+                        {t("analysisView.overallScore", {
+                          score: selectedAnalysis.overallScore,
+                        })}
                       </div>
                     </div>
 
@@ -417,7 +425,7 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                           <div className="mt-3 flex items-center justify-between gap-4 text-sm text-muted">
                             <div>
                               <p className="text-xs uppercase tracking-[0.14em]">
-                                Baseline
+                                {t("insights.baseline")}
                               </p>
                               <p className="mt-1 font-semibold text-foreground">
                                 {insight.baselineValue}
@@ -426,7 +434,7 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                             <div className="h-px flex-1 bg-line" />
                             <div className="text-right">
                               <p className="text-xs uppercase tracking-[0.14em]">
-                                Follow-up
+                                {t("insights.followup")}
                               </p>
                               <p className="mt-1 font-semibold text-foreground">
                                 {insight.followupValue}
@@ -443,7 +451,7 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                     <div className="mt-6 grid gap-4 lg:grid-cols-2">
                       <div className="rounded-3xl bg-[#f3ede2] p-5">
                         <p className="text-sm font-semibold tracking-[0.16em] text-muted uppercase">
-                          Suggested next steps
+                          {t("analysisView.suggestedNextSteps")}
                         </p>
                         <div className="mt-3 space-y-3 text-sm leading-6 text-foreground/85">
                           {selectedAnalysis.recommendations.map(
@@ -455,7 +463,7 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                       </div>
                       <div className="rounded-3xl bg-[#eef3ef] p-5">
                         <p className="text-sm font-semibold tracking-[0.16em] text-muted uppercase">
-                          Review notes
+                          {t("analysisView.reviewNotes")}
                         </p>
                         <div className="mt-3 space-y-3 text-sm leading-6 text-foreground/85">
                           {selectedAnalysis.cautions.map((caution) => (
@@ -473,14 +481,18 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
           <section className="sticky bottom-0 mt-4 rounded-[36px] border border-white/80 bg-white/90 p-4 shadow-(--shadow) backdrop-blur md:p-5">
             <div className="grid gap-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
               <VideoDropzone
-                label="Baseline"
+                label={t("dropzone.baselineLabel")}
+                dropLabel={t("dropzone.baselineLabel")}
                 file={baselineFile}
                 onFileSelect={setBaselineFile}
+                tDropzone={tDropzone}
               />
               <VideoDropzone
-                label="Follow-up"
+                label={t("dropzone.followupLabel")}
+                dropLabel={t("dropzone.followupLabel")}
                 file={followupFile}
                 onFileSelect={setFollowupFile}
+                tDropzone={tDropzone}
               />
               <div className="flex flex-col gap-3 lg:w-60">
                 <div className="rounded-3xl bg-[#fbf4ea] p-4 text-sm leading-6 text-muted">
@@ -492,7 +504,9 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                   onClick={handleAnalyze}
                   className="inline-flex items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,#cc6f45,#a94f27)] px-5 py-4 text-sm font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isPending ? "Saving report..." : "Analyze progress"}
+                  {isPending
+                    ? t("bottomBar.savingReport")
+                    : t("bottomBar.analyzeProgress")}
                 </button>
               </div>
             </div>
