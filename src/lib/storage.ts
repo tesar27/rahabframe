@@ -4,7 +4,9 @@ import { randomUUID } from "node:crypto";
 
 import type { AnalysisRecord } from "@/lib/types";
 
-const dataDirectory = path.join(process.cwd(), "data");
+const dataDirectory = process.env.VERCEL
+  ? "/tmp"
+  : path.join(process.cwd(), "data");
 const storePath = path.join(dataDirectory, "analyses.json");
 
 async function ensureStore() {
@@ -18,12 +20,8 @@ async function readStore(): Promise<AnalysisRecord[]> {
     const file = await readFile(storePath, "utf8");
     const parsed = JSON.parse(file) as AnalysisRecord[];
     return parsed.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return [];
-    }
-
-    throw error;
+  } catch {
+    return [];
   }
 }
 
