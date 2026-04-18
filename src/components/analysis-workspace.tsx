@@ -94,7 +94,7 @@ function VideoDropzone({
         }
       }}
       className={[
-        "flex min-h-36 cursor-pointer flex-col justify-between rounded-[28px] border border-dashed p-5 transition-all",
+        "flex min-h-24 cursor-pointer flex-col justify-between rounded-[20px] border border-dashed p-3.5 transition-all sm:min-h-36 sm:rounded-[28px] sm:p-5",
         isDragging
           ? "border-accent bg-accent-soft shadow-[0_0_0_4px_rgba(204,111,69,0.08)]"
           : "border-line bg-white/70 hover:border-sage hover:bg-white",
@@ -107,22 +107,22 @@ function VideoDropzone({
         accept="video/mp4,video/webm,video/quicktime"
         onChange={(event) => onFileSelect(event.target.files?.[0] ?? null)}
       />
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold tracking-[0.16em] text-muted uppercase">
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-xs font-semibold tracking-[0.14em] text-muted uppercase sm:text-sm sm:tracking-[0.16em]">
             {label}
           </span>
-          <span className="rounded-full bg-sage-soft px-3 py-1 text-xs font-medium text-sage">
+          <span className="hidden rounded-full bg-sage-soft px-3 py-1 text-xs font-medium text-sage sm:inline">
             {tDropzone("videoBadge")}
           </span>
         </div>
         <div>
-          <p className="text-base font-semibold text-foreground">
+          <p className="line-clamp-1 text-sm font-semibold text-foreground sm:text-base">
             {file
               ? file.name
               : tDropzone("dropHere", { label: dropLabel.toLowerCase() })}
           </p>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-0.5 hidden text-xs text-muted sm:mt-1 sm:block sm:text-sm">
             {file
               ? `${formatFileSize(file.size)} · ${file.type || "Unknown format"}`
               : tDropzone("fileTypes")}
@@ -130,8 +130,8 @@ function VideoDropzone({
         </div>
       </div>
 
-      <div className="mt-5 flex items-center justify-between text-sm text-muted">
-        <span>
+      <div className="mt-3 flex items-center justify-between text-xs text-muted sm:mt-5 sm:text-sm">
+        <span className="hidden sm:inline">
           {file ? tDropzone("readyForAnalysis") : tDropzone("clickToChoose")}
         </span>
         {file ? (
@@ -478,8 +478,8 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
             )}
           </section>
 
-          <section className="sticky bottom-0 mt-4 rounded-[36px] border border-white/80 bg-white/90 p-4 shadow-(--shadow) backdrop-blur md:p-5">
-            <div className="grid gap-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+          <section className="sticky bottom-0 mt-4 rounded-[28px] border border-white/80 bg-white/90 p-3 shadow-(--shadow) backdrop-blur sm:rounded-[36px] sm:p-4 md:p-5">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
               <VideoDropzone
                 label={t("dropzone.baselineLabel")}
                 dropLabel={t("dropzone.baselineLabel")}
@@ -494,20 +494,23 @@ export function AnalysisWorkspace({ initialAnalyses }: AnalysisWorkspaceProps) {
                 onFileSelect={setFollowupFile}
                 tDropzone={tDropzone}
               />
-              <div className="flex flex-col gap-3 lg:w-60">
-                <div className="rounded-3xl bg-[#fbf4ea] p-4 text-sm leading-6 text-muted">
+              <div className="col-span-2 flex items-center gap-2 lg:col-span-1 lg:w-60 lg:flex-col lg:gap-3">
+                <div className="hidden flex-1 rounded-3xl bg-[#fbf4ea] p-3 text-sm leading-6 text-muted lg:block lg:p-4">
                   {statusText}
                 </div>
                 <button
                   type="button"
                   disabled={isPending || !baselineFile || !followupFile}
                   onClick={handleAnalyze}
-                  className="inline-flex items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,#cc6f45,#a94f27)] px-5 py-4 text-sm font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-1 inline-flex items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#cc6f45,#a94f27)] px-4 py-3 text-sm font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-[20px] sm:py-4 lg:w-full"
                 >
                   {isPending
                     ? t("bottomBar.savingReport")
                     : t("bottomBar.analyzeProgress")}
                 </button>
+                {isPending && (
+                  <p className="text-xs text-muted lg:hidden">{statusText}</p>
+                )}
               </div>
             </div>
 
