@@ -1,21 +1,27 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import { Inter, Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import { I18nProvider } from "@/lib/i18n-context";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
 });
 
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  weight: ["400", "500"],
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
+  variable: "--font-space-grotesk",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-ibm-plex-mono",
 });
 
 export const metadata: Metadata = {
   title: "RehabFrame",
-  description: "Video-based rehabilitation progress reviews for therapy teams.",
+  description: "Video analysis for rehabilitation progress.",
 };
 
 export default function RootLayout({
@@ -24,12 +30,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="ru"
-      className={`${spaceGrotesk.variable} ${plexMono.variable} h-full antialiased`}
-    >
-      <body suppressHydrationWarning className="min-h-full flex flex-col">
-        {children}
+    <html lang="en">
+      <body
+        className={`${inter.variable} ${spaceGrotesk.variable} ${ibmPlexMono.variable} font-sans`}
+      >
+        <I18nProvider>{children}</I18nProvider>
       </body>
     </html>
   );

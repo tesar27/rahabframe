@@ -1,7 +1,10 @@
-import { redirect } from "next/navigation";
+import { AnalysisWorkspace } from "@/components/analysis-workspace";
+import { listAnalyses } from "@/lib/storage";
 
-// Fallback: middleware handles this for most clients, but this ensures
-// a hard redirect to the default locale if the middleware doesn't fire.
-export default function Page() {
-  redirect("/ru");
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const analyses = await listAnalyses();
+
+  return <AnalysisWorkspace initialAnalyses={analyses} />;
 }

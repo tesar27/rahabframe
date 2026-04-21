@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, useTransition } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "@/lib/i18n-context";
 
 import { analyzeVideoPair } from "@/lib/client/movenet-analysis";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -68,7 +68,7 @@ function VideoDropzone({
   dropLabel: string;
   file: File | null;
   onFileSelect: (file: File | null) => void;
-  tDropzone: ReturnType<typeof useTranslations<"dropzone">>;
+  tDropzone: (key: string, params?: Record<string, any>) => string;
 }) {
   const inputId = useId();
   const [isDragging, setIsDragging] = useState(false);
